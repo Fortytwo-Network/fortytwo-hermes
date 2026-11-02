@@ -1,0 +1,11 @@
+name: fortytwo-provider
+kind: model-provider
+version: "1.0.0"
+description: Fortytwo — Qwen3.8 27B inference for Hermes
+author: Fortytwo
+requires_hermes: ">=0.22.5"
+provides_tools: []
+provides_hooks: []
+provides_middleware: []
+requires_env:
+  - FORTYTWO_API_KEY
