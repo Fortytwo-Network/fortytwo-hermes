@@ -4,6 +4,7 @@ from providers import register_provider
 from providers.base import ProviderProfile
 
 MODEL = "qwen/qwen3.8-27b"
+MODELS = (MODEL, "nvidia/nemotron-3.5-super-vl", "nvidia/nemotron-3.5-super-vl:free")
 EFFORTS = ("none", "low", "medium", "xhigh")
 
 
@@ -16,9 +17,13 @@ class FortytwoProfile(ProviderProfile):
         effort = reasoning_config.get("effort")
         if effort is None:
             return {}, {}
-        # Hermes has a wider ladder. Advertise native levels and round down.
-        effort = {"minimal": "none", "high": "medium", "max": "xhigh",
-                  "ultra": "xhigh"}.get(effort, effort)
+        # Map Hermes levels to the selected model's documented reasoning modes.
+        if context.get("model") in MODELS[1:]:
+            effort = {"minimal": "low", "medium": "low", "high": "xhigh",
+                      "max": "xhigh", "ultra": "xhigh"}.get(effort, effort)
+        else:
+            effort = {"minimal": "none", "high": "medium", "max": "xhigh",
+                      "ultra": "xhigh"}.get(effort, effort)
         if effort not in EFFORTS:
             raise ValueError(f"Unsupported reasoning effort: {effort}")
         return {}, {"reasoning_effort": effort}
@@ -27,22 +32,22 @@ class FortytwoProfile(ProviderProfile):
 register_provider(FortytwoProfile(
     name="fortytwo",
     display_name="Fortytwo",
-    description="Qwen3.8 27B on Fortytwo",
+    description="Fortytwo — Better answers from open models",
     signup_url="https://platform.fortytwo.network",
     env_vars=("FORTYTWO_API_KEY",),
     base_url="https://api.fortytwo.network/v1",
     api_mode="chat_completions",
-    fallback_models=(MODEL,),
+    fallback_models=MODELS,
     supports_streaming=True,
     supports_vision=True,
     default_headers={
         "HTTP-Referer": "https://github.com/Fortytwo-Network/fortytwo-hermes",
         "X-Title": "Hermes Agent via Fortytwo",
     },
-    model_capabilities={MODEL: {
+    model_capabilities={model: {
         "supports_reasoning": True,
         "supports_vision": True,
         "supports_tools": True,
         "context_window": 262144,
-    }},
+    } for model in MODELS},
 ))
