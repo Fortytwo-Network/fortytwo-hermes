@@ -16,6 +16,38 @@ class ProviderTest(unittest.TestCase):
         self.assertTrue(caps.supports_reasoning)
         self.assertEqual(caps.context_window, 262144)
 
+    def test_all_models_and_description(self):
+        profile = get_provider_profile("fortytwo")
+        models = ("qwen/qwen3.8-27b", "nvidia/nemotron-3.5-super-vl",
+                  "nvidia/nemotron-3.5-super-vl:free")
+        self.assertEqual(profile.fallback_models, models)
+        self.assertEqual(profile.description, "Fortytwo — Better answers from open models")
+        for model in models:
+            with self.subTest(model=model):
+                caps = get_model_capabilities("fortytwo", model, allow_network=False)
+                self.assertTrue(caps.supports_vision)
+                self.assertTrue(caps.supports_tools)
+                self.assertTrue(caps.supports_reasoning)
+                self.assertEqual(caps.context_window, 262144)
+
+    def test_nemotron_reasoning_modes(self):
+        profile = get_provider_profile("fortytwo")
+        for model in ("nvidia/nemotron-3.5-super-vl", "nvidia/nemotron-3.5-super-vl:free"):
+            for requested, expected in (("none", "none"), ("minimal", "low"),
+                                        ("low", "low"), ("medium", "low"),
+                                        ("high", "xhigh"), ("xhigh", "xhigh"),
+                                        ("max", "xhigh"), ("ultra", "xhigh")):
+                with self.subTest(model=model, effort=requested):
+                    self.assertEqual(profile.build_api_kwargs_extras(
+                        model=model, reasoning_config={"effort": requested}),
+                        ({}, {"reasoning_effort": expected}))
+            self.assertEqual(profile.build_api_kwargs_extras(model=model), ({}, {}))
+            self.assertEqual(profile.build_api_kwargs_extras(
+                model=model, reasoning_config={"enabled": False, "effort": "high"}),
+                ({}, {"reasoning_effort": "none"}))
+        with self.assertRaises(ValueError):
+            profile.build_api_kwargs_extras(reasoning_config={"effort": "invalid"})
+
     def test_reasoning_wire_and_disabled_default(self):
         profile = get_provider_profile("fortytwo")
         self.assertEqual(profile.build_api_kwargs_extras(), ({}, {}))

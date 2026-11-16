@@ -12,10 +12,10 @@ Requires Hermes 0.22.5 or later.
 ## Install
 
 ```sh
-hermes plugins install https://github.com/Fortytwo-Network/fortytwo-hermes
+hermes plugins install fortytwo-provider
 ```
 
-The [Hermes catalogue submission](https://github.com/NousResearch/hermes-agent/pull/147925) is under review. Install from the Git URL above until the entry is accepted.
+The [catalogue entry](https://github.com/NousResearch/hermes-agent/pull/147925) is merged and pins a reviewed commit. New versions become available through the catalogue after its SHA is updated.
 
 To remove it: `hermes plugins remove fortytwo-provider`.
 
@@ -32,7 +32,7 @@ Create a key on the [API keys](https://platform.fortytwo.network/api-keys) page 
 
 ## Select the model
 
-Run `hermes model`, choose the Fortytwo provider and select `qwen/qwen3.8-27b`. Hermes saves your selection as the default. From the command line:
+Run `hermes model`, choose the Fortytwo provider and select a model from the table below. Hermes saves your selection as the default. From the command line:
 
 ```sh
 hermes --provider fortytwo --model qwen/qwen3.8-27b
@@ -43,12 +43,18 @@ hermes --provider fortytwo --model qwen/qwen3.8-27b
 | Model ID | Name | Context (tokens) | Max output (tokens) | Input | Input price (USD / 1M tokens) | Output price (USD / 1M tokens) | Cached input price (USD / 1M tokens) |
 |---|---|---|---|---|---|---|---|
 | `qwen/qwen3.8-27b` | Qwen3.8 27B | 262,144 | 235,929 | text, image | 0.425 | 2.55 | 0.085 |
+| `nvidia/nemotron-3.5-super-vl` | Nemotron 3.5 Super VL | 262,144 | 235,929 | text, image | 0.15 | 0.45 | 0.015 |
+| `nvidia/nemotron-3.5-super-vl:free` | Nemotron 3.5 Super VL Free | 262,144 | 235,929 | text, image | 0 | 0 | 0 |
+
+The free model is subject to Free tier limits and request collection; see [Free models](https://docs.fortytwo.network/docs/models#free-models).
 
 Current models: [Models](https://docs.fortytwo.network/docs/models). Current prices: [Pricing](https://docs.fortytwo.network/docs/pricing).
 
 ## Reasoning
 
-Use `--reasoning medium` when starting Hermes, or configure reasoning through `hermes model`. We recommend **medium**.
+Use `--reasoning xhigh` when starting Hermes, or configure reasoning through `hermes model`. Fortytwo recommends **xhigh**.
+
+For Qwen:
 
 | Hermes level | Sent to the API as `reasoning_effort` |
 |---|---|
@@ -57,7 +63,9 @@ Use `--reasoning medium` when starting Hermes, or configure reasoning through `h
 | medium, high | `medium` |
 | xhigh, max, ultra | `xhigh` |
 
-The plugin rounds wider Hermes levels down to the nearest native level. An unset effort leaves the API default in charge. Hermes reads Fortytwo's `reasoning` response field natively. Reasoning tokens count against the output limit.
+For both Nemotron variants, `none` disables reasoning, `minimal`/`low`/`medium` map to `low` (shorter reasoning), and `high`/`xhigh`/`max`/`ultra` map to `xhigh` (full reasoning).
+
+The plugin maps Hermes levels to each model's native modes. An unset effort leaves the API default in charge. Hermes reads Fortytwo's `reasoning` response field natively. Reasoning tokens count against the output limit.
 
 ## Environment variables
 
